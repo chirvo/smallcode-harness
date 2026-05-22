@@ -18,13 +18,17 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
+    "lefthook": "^2.1.8",
     "typescript": "^6.0.3"
   },
   "scripts": {
     "test": "bun test",
+    "test:watch": "bun test --watch",
     "test:unit": "bun test test/unit/",
     "test:smoke": "bun test test/smoke/",
-    "typecheck": "tsc --noEmit"
+    "test:e2e": "bash test/smoke/qa.sh",
+    "typecheck": "tsc --noEmit",
+    "qa": "bun typecheck && bun test && bash test/smoke/qa.sh"
   },
   "pi": {
     "extensions": ["./src/index.ts"]

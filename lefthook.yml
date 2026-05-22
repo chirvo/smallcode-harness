@@ -1,0 +1,12 @@
+# pre-commit hooks for smallcode-harness
+# Install: bun add -d lefthook && bunx lefthook install
+
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      glob: "*.ts"
+      run: bun typecheck
+    test:
+      glob: "*.ts"
+      run: bun test
