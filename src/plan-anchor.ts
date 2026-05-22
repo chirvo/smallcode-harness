@@ -20,7 +20,7 @@ const MAX_STEPS = 8;
 // Regex-based plan extraction (falls back to null — user can also supply via prompt)
 const PLAN_STEP_RE = /^\d+\.\s+(.+)$/gm;
 
-function extractPlanSteps(text: string): string[] | null {
+export function extractPlanSteps(text: string): string[] | null {
   const steps: string[] = [];
   let match: RegExpExecArray | null;
 
@@ -45,7 +45,7 @@ function extractFileReferences(text: string): string[] {
 }
 
 /** Kahn's topological sort for dependency detection. */
-function buildDependencyBatches(steps: string[]): number[][] {
+export function buildDependencyBatches(steps: string[]): number[][] {
   const n = steps.length;
   const adj: number[][] = Array.from({ length: n }, () => []);
   const inDegree: number[] = new Array(n).fill(0);
@@ -92,7 +92,7 @@ function buildDependencyBatches(steps: string[]): number[][] {
   return batches;
 }
 
-function formatPlanAnchor(plan: PlanState, batches?: number[][]): string {
+export function formatPlanAnchor(plan: PlanState, batches?: number[][]): string {
   const { steps, currentStep, completed } = plan;
   const completedSet = new Set(completed);
   const lines: string[] = [`ACTIVE PLAN (step ${currentStep + 1} of ${steps.length}):`];
@@ -163,6 +163,7 @@ export function registerPlanAnchor(pi: ExtensionAPI, state: HarnessStateManager)
           text: anchor,
         },
       ],
+      timestamp: Date.now(),
     });
   });
 

@@ -27,7 +27,7 @@ const PATCH_SPIRAL_ATTEMPT_LIMIT = 6;
 
 // ── Repetition Loop Detector ─────────────────────────────────────────────────
 
-function checkRepetition(buffer: string): string | null {
+export function checkRepetition(buffer: string): string | null {
   if (buffer.length < 200) return null;
 
   const tail = buffer.slice(-200);
@@ -66,7 +66,7 @@ const GREETING_PATTERNS = [
   "hi there! what",
 ];
 
-function checkGreeting(content: string, hasToolCalls: boolean): string | null {
+export function checkGreeting(content: string, hasToolCalls: boolean): string | null {
   if (!hasToolCalls) return null;
   const lc = content.toLowerCase();
   if (GREETING_PATTERNS.some((p) => lc.includes(p))) {
@@ -162,7 +162,7 @@ Do NOT attempt another patch on this file.`;
     const content = extractText(event.message);
     if (!content) return;
 
-    const hasToolCalls = Array.isArray((event.message as Record<string, unknown>).tool_calls);
+    const hasToolCalls = Array.isArray((event.message as unknown as Record<string, unknown>).tool_calls);
 
     // Check greeting regression
     const greetingInjection = checkGreeting(content, hasToolCalls);

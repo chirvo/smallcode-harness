@@ -10,15 +10,21 @@
   "license": "MIT",
   "type": "module",
   "peerDependencies": {
-    "@earendil-works/pi-ai": "*",
-    "@earendil-works/pi-agent-core": "*",
-    "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*",
-    "typebox": "*"
+    "@earendil-works/pi-ai": "^0.75.4",
+    "@earendil-works/pi-agent-core": "^0.75.4",
+    "@earendil-works/pi-coding-agent": "^0.75.4",
+    "@earendil-works/pi-tui": "^0.75.4",
+    "typebox": "^1.1.38"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "test": "bun test",
+    "test:unit": "bun test test/unit/",
+    "test:smoke": "bun test test/smoke/",
+    "typecheck": "tsc --noEmit"
   },
   "pi": {
     "extensions": ["./src/index.ts"]

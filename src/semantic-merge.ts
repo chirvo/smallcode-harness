@@ -34,7 +34,7 @@ function isOldStrNotFound(event: { content?: unknown; isError?: boolean }): bool
   return false;
 }
 
-function trySimpleMerge(currentContent: string, newStr: string, oldStr: string): string | null {
+export function trySimpleMerge(currentContent: string, newStr: string, oldStr: string): string | null {
   // Try fuzzy match: find the closest block of text that approximately matches oldStr
   // Strategy: match on first/last lines of oldStr
   const oldLines = oldStr.split("\n").filter((l) => l.trim().length > 0);

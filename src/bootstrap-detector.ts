@@ -15,7 +15,7 @@ import type { BootstrapInfo, HarnessStateManager } from "./state.ts";
 
 const ENV_KEY = "SMALLCODE_BOOTSTRAP";
 
-function detectBootstrap(cwd: string): BootstrapInfo {
+export function detectBootstrap(cwd: string): BootstrapInfo {
   const info: BootstrapInfo = {
     runtime: null,
     version: null,
@@ -105,7 +105,7 @@ function detectBootstrap(cwd: string): BootstrapInfo {
   return info;
 }
 
-function detectNodeFramework(pkg: Record<string, unknown>): string | null {
+export function detectNodeFramework(pkg: Record<string, unknown>): string | null {
   const deps: Record<string, string> = { ...(pkg.dependencies as Record<string, string> || {}), ...(pkg.devDependencies as Record<string, string> || {}) };
   const keys = Object.keys(deps);
   if (keys.includes("next")) return "Next.js";
@@ -121,7 +121,7 @@ function detectNodeFramework(pkg: Record<string, unknown>): string | null {
   return null;
 }
 
-function formatBootstrap(info: BootstrapInfo): string | null {
+export function formatBootstrap(info: BootstrapInfo): string | null {
   if (!info.runtime) return null;
   const lines: string[] = ["[PROJECT BOOTSTRAP]"];
   lines.push(`Runtime: ${info.runtime}${info.version ? ` ${info.version}` : ""}`);

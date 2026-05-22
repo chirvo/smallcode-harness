@@ -63,6 +63,7 @@ export function registerTrustDecay(pi: ExtensionAPI, state: HarnessStateManager)
       event.messages.push({
         role: "user" as const,
         content: [{ type: "text" as const, text: noteText }],
+        timestamp: Date.now(),
       });
     }
   });

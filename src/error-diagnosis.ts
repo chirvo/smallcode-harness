@@ -62,7 +62,7 @@ const FILE_LINE_PATTERNS = [
   /([\w./]+\.\w+):(\d+):(\d+)/,            // Rust/tsc
 ];
 
-function classifyError(command: string, stderr: string, exitCode: number): Diagnosis {
+export function classifyError(command: string, stderr: string, exitCode: number): Diagnosis {
   const full = `${command}\n${stderr}`;
 
   // Check timeout
