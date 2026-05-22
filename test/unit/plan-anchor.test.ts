@@ -72,3 +72,61 @@ test("formatPlanAnchor: all complete", () => {
   expect(result).toContain("✓ 1.");
   expect(result).toContain("✓ 2.");
 });
+
+// ── Stale-plan clearing tests ───────────────────────────────────────────────
+
+import { clearPlan, messageReferencesPlan } from "../../src/plan-anchor.ts";
+import { HarnessStateManager } from "../../src/state.ts";
+
+test("messageReferencesPlan: matches by plan keyword", () => {
+  const steps = ["Add logging to auth.ts", "Fix error handling"];
+  expect(messageReferencesPlan("add logging to auth.ts", steps)).toBe(true);
+});
+
+test("messageReferencesPlan: matches by 'step' keyword", () => {
+  expect(messageReferencesPlan("step 2 is done", ["read file"])).toBe(true);
+});
+
+test("messageReferencesPlan: matches by 'plan' keyword", () => {
+  expect(messageReferencesPlan("update the plan", ["read file"])).toBe(true);
+});
+
+test("messageReferencesPlan: ignores unrelated messages", () => {
+  const steps = ["Add logging to auth.ts", "Fix error handling"];
+  expect(messageReferencesPlan("what is the weather today", steps)).toBe(false);
+});
+
+test("messageReferencesPlan: ignores short words (<5 chars)", () => {
+  const steps = ["Fix the bug in main.ts"];
+  expect(messageReferencesPlan("run the tests", steps)).toBe(false);
+});
+
+test("clearPlan: resets plan state and flushes", () => {
+  const mockPi = {
+    on: () => {},
+    appendEntry: () => {},
+  };
+  const state = new HarnessStateManager(mockPi as any);
+
+  // Set up a plan
+  state.state.plan = { steps: ["do X"], currentStep: 0, completed: [] };
+  state.state.planExtracted = true;
+
+  clearPlan(state);
+
+  expect(state.state.plan).toBeNull();
+  expect(state.state.planExtracted).toBe(false);
+});
+
+test("clearPlan: no-op when no plan exists", () => {
+  const mockPi = {
+    on: () => {},
+    appendEntry: () => {},
+  };
+  const state = new HarnessStateManager(mockPi as any);
+
+  // Should not throw
+  clearPlan(state);
+  expect(state.state.plan).toBeNull();
+  expect(state.state.planExtracted).toBe(false);
+});

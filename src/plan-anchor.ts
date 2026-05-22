@@ -239,8 +239,21 @@ export function registerPlanAnchor(pi: ExtensionAPI, state: HarnessStateManager)
   });
 }
 
+/**
+ * Check if user input references the current plan.
+ * Returns false if the message is about a different task — triggers plan clear.
+ */
+export function messageReferencesPlan(text: string, planSteps: string[]): boolean {
+  const lower = text.toLowerCase();
+  if (lower.includes("step") || lower.includes("plan")) return true;
+  return planSteps.some((s) => {
+    const keyWords = s.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+    return keyWords.some((w) => lower.includes(w));
+  });
+}
+
 /** Clear the active plan */
-function clearPlan(state: HarnessStateManager): void {
+export function clearPlan(state: HarnessStateManager): void {
   state.state.plan = null;
   state.state.planExtracted = false;
   state.flush();
