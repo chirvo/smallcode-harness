@@ -13,6 +13,7 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { HarnessStateManager, PlanState } from "./state.ts";
+import { log } from "./log.ts";
 
 const ENV_KEY = "SMALLCODE_PLAN_ANCHOR";
 const MAX_STEPS = 8;
@@ -127,6 +128,32 @@ export function registerPlanAnchor(pi: ExtensionAPI, state: HarnessStateManager)
   if (!enabled) return;
 
   let stepAdvanceCooldown = 0;
+  let turnsWithoutAdvancement = 0;
+  const MAX_STALE_TURNS = 3;  // Clear plan if no advancement in 3 turns
+
+  // Clear plan when a new user message doesn't reference the current plan
+  pi.on("input", (event, _ctx: ExtensionContext) => {
+    if (!state.state.plan || !state.state.planExtracted) return;
+    if (event.source !== "interactive") return;
+
+    const text = event.text.toLowerCase();
+    const planSteps = state.state.plan.steps.join(" ").toLowerCase();
+
+    // Check if the message references the plan at all
+    const referencesPlan =
+      text.includes("step") ||
+      text.includes("plan") ||
+      state.state.plan.steps.some((s) => {
+        const keyWords = s.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+        return keyWords.some((w) => text.includes(w));
+      });
+
+    if (!referencesPlan) {
+      // New task that doesn't reference the plan — clear it
+      clearPlan(state);
+      log.debug("plan-anchor", "Cleared stale plan — new task detected");
+    }
+  });
 
   // Extract plan from first assistant message
   pi.on("message_end", (event, _ctx: ExtensionContext) => {
@@ -145,6 +172,8 @@ export function registerPlanAnchor(pi: ExtensionAPI, state: HarnessStateManager)
       completed: [],
     };
     state.state.planExtracted = true;
+    turnsWithoutAdvancement = 0;
+    log.info("plan-anchor", "Extracted plan: %d steps", steps.length);
     state.flush();
   });
 
@@ -186,10 +215,35 @@ export function registerPlanAnchor(pi: ExtensionAPI, state: HarnessStateManager)
     }
   });
 
-  // Reset cooldown on new turn
+  // Reset cooldown on new turn + check for stale plan
   pi.on("turn_start", (_event, _ctx: ExtensionContext) => {
     stepAdvanceCooldown = 0;
+
+    // Clear if no advancement in MAX_STALE_TURNS
+    if (state.state.plan && state.state.planExtracted) {
+      turnsWithoutAdvancement++;
+      if (turnsWithoutAdvancement >= MAX_STALE_TURNS) {
+        clearPlan(state);
+        log.info("plan-anchor", "Cleared stale plan — %d turns without advancement", MAX_STALE_TURNS);
+      }
+    }
   });
+
+  // Register /plan-clear command
+  pi.registerCommand("plan-clear", {
+    description: "Clear the active plan anchor",
+    handler: async (_args, ctx) => {
+      clearPlan(state);
+      ctx.ui.notify("Plan anchor cleared", "info");
+    },
+  });
+}
+
+/** Clear the active plan */
+function clearPlan(state: HarnessStateManager): void {
+  state.state.plan = null;
+  state.state.planExtracted = false;
+  state.flush();
 }
 
 function extractText(message: { content?: unknown }): string | null {
