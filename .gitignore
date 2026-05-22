@@ -3,3 +3,4 @@ dist/
 .vite/
 *.tsbuildinfo
 .DS_Store
+src/diagnostic.ts

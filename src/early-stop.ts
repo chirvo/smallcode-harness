@@ -11,17 +11,13 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import type { HarnessStateManager } from "./state.ts";
 
 const ENV_KEY = "SMALLCODE_EARLY_STOP";
-const READ_TOOLS = new Set(["read", "grep", "find", "ls", "search"]);
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const REPETITION_THRESHOLD = 3;
 const REPETITION_WINDOW_SIZES = [50, 80, 120];
-const READ_LOOP_SOFT_NUDGE = 5;
-const READ_LOOP_HARD_STOP = 8;
 const PATCH_SPIRAL_FAIL_LIMIT = 4;
 const PATCH_SPIRAL_ATTEMPT_LIMIT = 6;
 
@@ -80,46 +76,6 @@ export function checkGreeting(content: string, hasToolCalls: boolean): string | 
 export function registerEarlyStop(pi: ExtensionAPI, state: HarnessStateManager): void {
   const enabled = process.env[ENV_KEY] !== "false";
   if (!enabled) return;
-
-  // Track read-only calls and detect loops
-  pi.on("tool_call", (event, _ctx: ExtensionContext) => {
-    const toolName = event.toolName;
-
-    // Read tools
-    if (READ_TOOLS.has(toolName)) {
-      // If model has written anything recently, reading is fine — reset streak
-      const streak = state.getReadStreak();
-      if (streak === 0) {
-        // First read — just track it
-        state.incrementReadStreak();
-      } else {
-        const newStreak = state.incrementReadStreak();
-
-        // Soft nudge at 5
-        if (newStreak === READ_LOOP_SOFT_NUDGE) {
-          pi.sendMessage({
-            customType: "sc-harness-correction",
-            content: "[SYSTEM] You have read 5 files/results. You likely have enough context. After your next read (if needed), write your findings immediately — don't keep reading.",
-            display: true,
-          });
-        }
-
-        // Hard stop at 8
-        if (newStreak >= READ_LOOP_HARD_STOP) {
-          pi.sendMessage({
-            customType: "sc-harness-correction",
-            content: "[SYSTEM] You have read 8 results without producing output. STOP reading and START writing now. If you need one more specific thing, get it — then write your response immediately.",
-            display: true,
-          });
-          state.resetReadStreak();
-        }
-      }
-      return;
-    }
-
-    // Non-read tool (write, edit, bash) — reset read streak and patch counters
-    state.resetReadStreak();
-  });
 
   // Track patch results for spiral detection
   pi.on("tool_result", (event, _ctx: ExtensionContext) => {
