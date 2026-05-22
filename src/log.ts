@@ -22,8 +22,10 @@ const LEVEL_NUM: Record<LogLevel, number> = {
   error: 3,
 };
 
-const ENV_LEVEL = (process.env["SMALLCODE_LOG_LEVEL"] || "warn") as LogLevel;
-const THRESHOLD = LEVEL_NUM[ENV_LEVEL] ?? 2;
+function getThreshold(): number {
+  const level = (process.env["SMALLCODE_LOG_LEVEL"] || "warn") as LogLevel;
+  return LEVEL_NUM[level] ?? 2;
+}
 
 let _logDir = "";
 
@@ -40,7 +42,7 @@ export function setLogDir(dir: string): void {
 }
 
 function write(level: LogLevel, module: string, message: string): void {
-  if (LEVEL_NUM[level] < THRESHOLD) return;
+  if (LEVEL_NUM[level] < getThreshold()) return;
   if (!_logDir) return;
 
   const ts = new Date().toISOString().slice(11, 23); // HH:MM:SS.mmm

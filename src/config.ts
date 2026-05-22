@@ -43,8 +43,15 @@ export interface HarnessConfig {
 export function loadConfig(overrides?: Partial<HarnessConfig>): HarnessConfig {
   const env = (key: string): string | undefined => process.env[key];
 
+  // Map env var key to config property name (e.g. SMALLCODE_BOOTSTRAP → bootstrap)
+  const envToConfigKey = (k: string): string => {
+    return k.replace(/^SMALLCODE_/, "").toLowerCase()
+      .replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  };
+
   const bool = (key: string, def: boolean): boolean => {
-    if (overrides && key in overrides) return (overrides as Record<string, unknown>)[key] as boolean;
+    const configKey = envToConfigKey(key);
+    if (overrides && configKey in overrides) return (overrides as Record<string, unknown>)[configKey] as boolean;
     const v = env(key);
     if (v === undefined || v === "") return def;
     return !["0", "false", "no", "off"].includes(v.toLowerCase());
