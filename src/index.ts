@@ -28,11 +28,33 @@ import { registerMultiFileEdit } from "./multi-file-edit.ts";
 import { registerSnapshot } from "./snapshot.ts";
 import { registerTaskDecomposition } from "./task-decomposition.ts";
 
+/**
+ * Wrap pi.on() so that if any handler throws, the error is caught and logged
+ * instead of crashing the extension. Each handler runs independently — one
+ * broken handler doesn't affect other handlers or modules.
+ */
+function withErrorBoundary(pi: ExtensionAPI): ExtensionAPI {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const api = pi as any;
+  const originalOn = api.on.bind(api);
+  api.on = (event: string, handler: (...args: any[]) => any) => {
+    originalOn(event, async (eventData: unknown, ctx: unknown) => {
+      try {
+        return await handler(eventData, ctx);
+      } catch (err) {
+        log.error("runtime", "Handler for '%s' threw: %s", event, String(err));
+      }
+    });
+  };
+  return pi;
+}
+
 export default function (pi: ExtensionAPI): void {
-  const state = new HarnessStateManager(pi);
+  const safePi = withErrorBoundary(pi);
+  const state = new HarnessStateManager(safePi);
 
   // Init logging + restore evidence from session
-  pi.on("session_start", (_event, ctx: ExtensionContext) => {
+  safePi.on("session_start", (_event, ctx: ExtensionContext) => {
     setLogDir(ctx.cwd + "/.smallcode");
     restoreEvidence(ctx);
   });
@@ -70,7 +92,7 @@ export default function (pi: ExtensionAPI): void {
       continue;
     }
     try {
-      mod.fn(pi, state);
+      mod.fn(safePi, state);
       log.info(mod.name, "Registered");
     } catch (err) {
       log.error(mod.name, "Failed to register: %s", String(err));
