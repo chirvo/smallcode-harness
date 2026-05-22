@@ -22,6 +22,16 @@ export interface HarnessConfig {
   adaptiveTemp: boolean;
   /** Patch semantic merge recovery */
   semanticMerge: boolean;
+  /** Auto-validate after edits */
+  autoValidate: boolean;
+  /** Evidence store (cross-session memory) */
+  evidence: boolean;
+  /** Multi-file edit coordination header */
+  multiFileEdit: boolean;
+  /** Snapshot & auto-rollback */
+  snapshot: boolean;
+  /** Task decomposition on repeated failure */
+  taskDecomposition: boolean;
   /** Structured log level: debug | info | warn | error */
   logLevel: string;
 }
@@ -49,6 +59,11 @@ export function loadConfig(overrides?: Partial<HarnessConfig>): HarnessConfig {
     trustDecay: bool("SMALLCODE_TRUST_DECAY", true),
     adaptiveTemp: bool("SMALLCODE_ADAPTIVE_TEMP", true),
     semanticMerge: bool("SMALLCODE_SEMANTIC_MERGE", true),
+    autoValidate: bool("SMALLCODE_AUTO_VALIDATE", true),
+    evidence: bool("SMALLCODE_EVIDENCE", true),
+    multiFileEdit: bool("SMALLCODE_MULTI_FILE_EDIT", true),
+    snapshot: bool("SMALLCODE_SNAPSHOT", true),
+    taskDecomposition: bool("SMALLCODE_DECOMPOSE", true),
     logLevel: env("SMALLCODE_LOG_LEVEL") || "warn",
   };
 }

@@ -7,6 +7,11 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { HarnessStateManager } from "./state.ts";
+import { setLogDir, log } from "./log.ts";
+import { loadConfig } from "./config.ts";
+import { restoreEvidence } from "./evidence.ts";
+
+// Original 8 modules
 import { registerBootstrapDetector } from "./bootstrap-detector.ts";
 import { registerReadTracker } from "./read-tracker.ts";
 import { registerEarlyStop } from "./early-stop.ts";
@@ -15,39 +20,60 @@ import { registerErrorDiagnosis } from "./error-diagnosis.ts";
 import { registerTrustDecay } from "./trust-decay.ts";
 import { registerAdaptiveTemp } from "./adaptive-temp.ts";
 import { registerSemanticMerge } from "./semantic-merge.ts";
-import { setLogDir, log } from "./log.ts";
+
+// New 5 modules — LLM-assisted DX improvements
+import { registerAutoValidate } from "./auto-validate.ts";
+import { registerEvidenceStore } from "./evidence.ts";
+import { registerMultiFileEdit } from "./multi-file-edit.ts";
+import { registerSnapshot } from "./snapshot.ts";
+import { registerTaskDecomposition } from "./task-decomposition.ts";
 
 export default function (pi: ExtensionAPI): void {
-  // ── Shared state ──────────────────────────────────────────────────────────
   const state = new HarnessStateManager(pi);
 
-  // Initialize logging to the project's .smallcode/ dir
+  // Init logging + restore evidence from session
   pi.on("session_start", (_event, ctx: ExtensionContext) => {
     setLogDir(ctx.cwd + "/.smallcode");
+    restoreEvidence(ctx);
   });
 
-  // ── Module registration (env-gated, all gracefully degrade) ───────────────
-  // Each module is wrapped in try/catch so one bad handler doesn't crash the
-  // entire extension. Errors are logged to .smallcode/sc-harness.log.
+  const cfg = loadConfig();
 
-  const modules = [
-    ["bootstrap", registerBootstrapDetector],
-    ["read-tracker", registerReadTracker],
-    ["early-stop", registerEarlyStop],
-    ["plan-anchor", registerPlanAnchor],
-    ["error-diagnosis", registerErrorDiagnosis],
-    ["trust-decay", registerTrustDecay],
-    ["adaptive-temp", registerAdaptiveTemp],
-    ["semantic-merge", registerSemanticMerge],
-  ] as const;
+  interface ModuleRegistration {
+    name: string;
+    fn: (pi: ExtensionAPI, state: HarnessStateManager) => void;
+    env?: boolean;
+  }
 
-  for (const [name, fn] of modules) {
+  const modules: ModuleRegistration[] = [
+    // Original 8
+    { name: "bootstrap", fn: registerBootstrapDetector },
+    { name: "read-tracker", fn: registerReadTracker },
+    { name: "early-stop", fn: registerEarlyStop },
+    { name: "plan-anchor", fn: registerPlanAnchor },
+    { name: "error-diagnosis", fn: registerErrorDiagnosis },
+    { name: "trust-decay", fn: registerTrustDecay },
+    { name: "adaptive-temp", fn: registerAdaptiveTemp },
+    { name: "semantic-merge", fn: registerSemanticMerge },
+
+    // New 5 — LLM-assisted DX
+    { name: "auto-validate", fn: registerAutoValidate, env: cfg.autoValidate },
+    { name: "evidence", fn: registerEvidenceStore, env: cfg.evidence },
+    { name: "multi-file-edit", fn: registerMultiFileEdit, env: cfg.multiFileEdit },
+    { name: "snapshot", fn: registerSnapshot, env: cfg.snapshot },
+    { name: "task-decomposition", fn: registerTaskDecomposition, env: cfg.taskDecomposition },
+  ];
+
+  for (const mod of modules) {
+    if (mod.env === false) {
+      log.debug(mod.name, "Disabled by config");
+      continue;
+    }
     try {
-      fn(pi, state);
-      log.info(name, "Registered");
+      mod.fn(pi, state);
+      log.info(mod.name, "Registered");
     } catch (err) {
-      log.error(name, "Failed to register: %s", String(err));
-      // Continue loading other modules — don't let one failure kill everything
+      log.error(mod.name, "Failed to register: %s", String(err));
     }
   }
 
