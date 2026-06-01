@@ -6,27 +6,27 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { HarnessStateManager } from "./state.ts";
-import { setLogDir, log } from "./log.ts";
-import { loadConfig } from "./config.ts";
-import { restoreEvidence } from "./evidence.ts";
+import { HarnessStateManager } from "./src/state.ts";
+import { setLogDir, log } from "./src//log.ts";
+import { loadConfig } from "./src/config.ts";
+import { restoreEvidence } from "./src/evidence.ts";
 
 // Original 8 modules
-import { registerBootstrapDetector } from "./bootstrap-detector.ts";
-import { registerReadTracker } from "./read-tracker.ts";
-import { registerEarlyStop } from "./early-stop.ts";
-import { registerPlanAnchor } from "./plan-anchor.ts";
-import { registerErrorDiagnosis } from "./error-diagnosis.ts";
-import { registerTrustDecay } from "./trust-decay.ts";
-import { registerAdaptiveTemp } from "./adaptive-temp.ts";
-import { registerSemanticMerge } from "./semantic-merge.ts";
+import { registerBootstrapDetector } from "./src/bootstrap-detector.ts";
+import { registerReadTracker } from "./src/read-tracker.ts";
+import { registerEarlyStop } from "./src/early-stop.ts";
+import { registerPlanAnchor } from "./src/plan-anchor.ts";
+import { registerErrorDiagnosis } from "./src/error-diagnosis.ts";
+import { registerTrustDecay } from "./src/trust-decay.ts";
+import { registerAdaptiveTemp } from "./src/adaptive-temp.ts";
+import { registerSemanticMerge } from "./src/semantic-merge.ts";
 
 // New 5 modules — LLM-assisted DX improvements
-import { registerAutoValidate } from "./auto-validate.ts";
-import { registerEvidenceStore } from "./evidence.ts";
-import { registerMultiFileEdit } from "./multi-file-edit.ts";
-import { registerSnapshot } from "./snapshot.ts";
-import { registerTaskDecomposition } from "./task-decomposition.ts";
+import { registerAutoValidate } from "./src/auto-validate.ts";
+import { registerEvidenceStore } from "./src/evidence.ts";
+import { registerMultiFileEdit } from "./src/multi-file-edit.ts";
+import { registerSnapshot } from "./src/snapshot.ts";
+import { registerTaskDecomposition } from "./src/task-decomposition.ts";
 
 /**
  * Wrap pi.on() so that if any handler throws, the error is caught and logged

@@ -8,7 +8,7 @@
 import { test, expect } from "bun:test";
 
 // Load the extension module
-const ext = await import("../../src/index.ts");
+const ext = await import("../../index.ts");
 
 test("extension exports a default function", () => {
   expect(typeof ext.default).toBe("function");

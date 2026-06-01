@@ -31,6 +31,6 @@
     "qa": "bun typecheck && bun test && bash test/smoke/qa.sh"
   },
   "pi": {
-    "extensions": ["./src/index.ts"]
+    "extensions": ["./index.ts"]
   }
 }
